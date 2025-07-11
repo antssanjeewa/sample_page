@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance</title>
+  <style>
+    body { font-family: Arial; padding: 30px; }
+    input { padding: 10px; width: 100%; margin-bottom: 20px; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 10px 0; }
+    a { text-decoration: none; color: blue; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Search Your Name to Mark Attendance</h2>
+  <input type="text" id="search" placeholder="Type your name..." onkeyup="filterList()" />
+
+  <ul id="nameList">
+    <li><a href="https://forms.gle/link1" target="_blank">Alice Fernando</a></li>
+    <li><a href="https://forms.gle/link2" target="_blank">Bob Silva</a></li>
+    <li><a href="https://forms.gle/link3" target="_blank">Chathura Perera</a></li>
+    <!-- Add more as needed -->
+  </ul>
+
+  <script>
+    function filterList() {
+      const input = document.getElementById('search').value.toLowerCase();
+      const items = document.querySelectorAll('#nameList li');
+      items.forEach(li => {
+        const name = li.textContent.toLowerCase();
+        li.style.display = name.includes(input) ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>
