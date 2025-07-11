@@ -366,7 +366,7 @@
         function init() {
             updateStats();
             // renderUsersList();
-            renderRecords();
+            // renderRecords();
         }
 
         // Tab switching
@@ -480,59 +480,49 @@
 
         // Render users list for attendance
         function renderUsersList() {
-            // getUsersFromSheet();
+    const usersList = document.getElementById('usersList');
 
-            getUsersFromFirebase().then(users => {
-                console.log(users);
-                users = fetchedUsers;
-            });
+    getUsersFromFirebase().then(fetchedUsers => {
+        users = fetchedUsers; // ✅ update global users array
 
-            const usersList = document.getElementById('usersList');
-
-            if (users.length === 0) {
-                usersList.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.1em;">No users registered yet. Please register users first.</p>';
-                return;
-            }
-
-            usersList.innerHTML = users.map(user => {
-                const todayRecord = attendanceRecords.find(
-                    record => record.userId === user.id && record.date === currentDate
-                );
-
-                return `
-                    <div class="user-card">
-                        <div class="user-info">
-                            <div class="user-detail">
-                                <strong>Name:</strong> ${user.name}
-                            </div>
-                            <div class="user-detail">
-                                <strong>Mobile:</strong> ${user.mobile}
-                            </div>
-                            <div class="user-detail">
-                                <strong>Age:</strong> ${user.age}
-                            </div>
-                            <div class="user-detail">
-                                <strong>Address:</strong> ${user.address}
-                            </div>
-                        </div>
-                        <div class="attendance-actions">
-                            <button class="btn btn-success" onclick="markAttendance('${user.id}', 'present')">
-                                ✅ Mark Present
-                            </button>
-                            <button class="btn btn-danger" onclick="markAttendance('${user.id}', 'absent')">
-                                ❌ Mark Absent
-                            </button>
-                        </div>
-                        ${todayRecord ? `
-                            <div class="attendance-record">
-                                <strong>Today's Status:</strong> ${todayRecord.status.toUpperCase()} 
-                                <small>(${new Date(todayRecord.timestamp).toLocaleTimeString()})</small>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            }).join('');
+        if (users.length === 0) {
+            usersList.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.1em;">No users registered yet. Please register users first.</p>';
+            return;
         }
+
+        usersList.innerHTML = users.map(user => {
+            const todayRecord = attendanceRecords.find(
+                record => record.userId === user.id && record.date === currentDate
+            );
+
+            return `
+                <div class="user-card">
+                    <div class="user-info">
+                        <div class="user-detail"><strong>Name:</strong> ${user.name}</div>
+                        <div class="user-detail"><strong>Mobile:</strong> ${user.mobile}</div>
+                        <div class="user-detail"><strong>Age:</strong> ${user.age}</div>
+                        <div class="user-detail"><strong>Address:</strong> ${user.address}</div>
+                    </div>
+                    <div class="attendance-actions">
+                        <button class="btn btn-success" onclick="markAttendance('${user.id}', 'present')">✅ Mark Present</button>
+                        <button class="btn btn-danger" onclick="markAttendance('${user.id}', 'absent')">❌ Mark Absent</button>
+                    </div>
+                    ${todayRecord ? `
+                        <div class="attendance-record">
+                            <strong>Today's Status:</strong> ${todayRecord.status.toUpperCase()} 
+                            <small>(${new Date(todayRecord.timestamp).toLocaleTimeString()})</small>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+
+        updateStats(); // ✅ Also update stats once users are loaded
+    }).catch(error => {
+        console.error("Failed to fetch users from Firebase:", error);
+        usersList.innerHTML = '<p style="color:red;">Failed to load users.</p>';
+    });
+}
 
         // Render attendance records
         function renderRecords() {
