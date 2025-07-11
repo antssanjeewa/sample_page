@@ -146,6 +146,23 @@ body {
   box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
 }
 
+.user-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 1.2em;
+}
+
+.user-search-input {
+  width: 100%;
+  padding: 12px 15px 12px 45px; /* space for icon on left */
+  font-size: 1em;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+}
+
 .user-card {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 2px solid #e2e8f0;
@@ -190,6 +207,42 @@ body {
   padding: 10px;
   margin-top: 10px;
   color: #0369a1;
+}
+
+.attendance-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.attendance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.attendance-header h2 {
+  color: #374151;
+  margin: 0;
+  font-size: 1.5em;
+}
+
+.attendance-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.filter-date {
+  padding: 10px 12px;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 .stats {
@@ -240,19 +293,23 @@ body {
 
 @media (max-width: 768px) {
   .user-info {
-      grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
   }
 
   .attendance-actions {
-      flex-direction: column;
+    flex-direction: column;
   }
 
-  .tabs{
+  .tabs {
     flex-direction: column;
     align-items: stretch;
   }
 
   .btn {
-      width: 100%;
+    width: 100%;
+  }
+
+  .attendance-controls {
+    width: 100%;
   }
 }

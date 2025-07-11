@@ -59,58 +59,26 @@
           <h2 style="margin-bottom: 20px; color: #374151">✅ Mark Attendance</h2>
 
           <div style="margin-bottom: 20px; position: relative">
-            <span
-              style="
-                position: absolute;
-                top: 50%;
-                left: 15px;
-                transform: translateY(-50%);
-                color: #6b7280;
-                font-size: 1.2em;
-              ">
-              🔍
-            </span>
+            <span class="user-search-icon"> 🔍 </span>
             <input
               type="text"
               id="searchInput"
               placeholder="Search by name or mobile..."
               oninput="renderUsersList()"
-              style="
-                width: 100%;
-                padding: 12px 15px 12px 45px; /* space for icon on left */
-                font-size: 1em;
-                border-radius: 10px;
-                border: 2px solid #e5e7eb;
-              " />
+              class="user-search-input" />
           </div>
 
           <div id="usersList"></div>
         </div>
 
         <div id="records" class="tab-content">
-          <div
-            class="form-group"
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 20px;
+          <div class="attendance-header">
+            <h2>📊 Attendance Records</h2>
 
-              flex-wrap: wrap;
-            ">
-            <h2 style="margin: 0; color: #374151">📊 Attendance Records</h2>
-            <input
-              type="date"
-              id="filterDate"
-              onchange="filterRecordsByDate()"
-              style="
-                padding: 10px 12px;
-                font-size: 1em;
-                border-radius: 8px;
-                max-width: 250px;
-                margin-top: 20px;
-                border: 1px solid #d1d5db;
-              " />
+            <div class="attendance-controls">
+              <input type="date" id="filterDate" onchange="filterRecordsByDate()" class="filter-date" />
+              <button onclick="downloadAttendanceCSV()" class="btn btn-primary">⬇️</button>
+            </div>
           </div>
           <div id="recordsList"></div>
         </div>
@@ -211,6 +179,7 @@
       function init() {
         updateStats();
         renderUsersList();
+        document.getElementById('filterDate').value = currentDate;
         // renderRecords();
       }
 
@@ -433,6 +402,33 @@
       function filterRecordsByDate() {
         const selectedDate = document.getElementById('filterDate').value;
         renderRecords(selectedDate);
+      }
+
+      function downloadAttendanceCSV() {
+        if (attendanceRecords.length === 0) {
+          alert('No records available to download.');
+          return;
+        }
+
+        const headers = ['Name', 'Status', 'Date', 'Time'];
+        const rows = attendanceRecords.map((record) => [
+          record.userName,
+          record.status.toUpperCase(),
+          record.date,
+          new Date(record.timestamp).toLocaleTimeString(),
+        ]);
+
+        const csvContent = [headers, ...rows].map((e) => e.join(',')).join('\n');
+
+        // Create a Blob and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `attendance_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
 
       // Show message
