@@ -312,6 +312,13 @@
 
             <div id="attendance" class="tab-content">
                 <h2 style="margin-bottom: 20px; color: #374151;">✅ Mark Attendance</h2>
+
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="searchInput" placeholder="🔍 Search by name or mobile..."
+                        oninput="renderUsersList()"
+                        style="width: 100%; padding: 12px; font-size: 1em; border-radius: 10px; border: 2px solid #e5e7eb;">
+                </div>
+
                 <div id="usersList"></div>
             </div>
 
@@ -352,6 +359,28 @@
         window.getUsersFromFirebase = async function () {
             const querySnapshot = await getDocs(collection(db, "users"));
             return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        };
+
+        window.markUserAttendance = async function (user, status) {
+            try {
+                const attendance = {
+                    userId: user.id,
+                    userName: user.name,
+                    date: new Date().toISOString().split('T')[0],
+                    status: status,
+                    timestamp: new Date().toISOString()
+                };
+
+                await addDoc(collection(db, "attendance"), attendance);
+                console.log("Attendance recorded for", user.name);
+            } catch (err) {
+                console.error("Error saving attendance", err);
+            }
+        };
+
+        window.getAttendanceRecords = async function () {
+            const querySnapshot = await getDocs(collection(db, "attendance"));
+            return querySnapshot.docs.map(doc => doc.data());
         };
     </script>
 
@@ -444,7 +473,7 @@
             const user = users.find(u => u.id === userId);
             if (!user) return;
 
-            // Check if already marked today
+            // Check if already marked in local cache (optional logic)
             const existingRecord = attendanceRecords.find(
                 record => record.userId === userId && record.date === currentDate
             );
@@ -456,7 +485,7 @@
             } else {
                 attendanceRecords.push({
                     id: Date.now().toString(),
-                    userId: userId,
+                    userId: user.id,
                     userName: user.name,
                     date: currentDate,
                     status: status,
@@ -464,6 +493,9 @@
                 });
                 showMessage(`Attendance marked for ${user.name}`, 'success');
             }
+
+            // ✅ Save to Firebase
+            markUserAttendance(user, status);
 
             updateStats();
             renderUsersList();
@@ -480,22 +512,28 @@
 
         // Render users list for attendance
         function renderUsersList() {
-    const usersList = document.getElementById('usersList');
+            const usersList = document.getElementById('usersList');
+            const searchTerm = document.getElementById('searchInput')?.value?.toLowerCase() || "";
 
-    getUsersFromFirebase().then(fetchedUsers => {
-        users = fetchedUsers; // ✅ update global users array
+            getUsersFromFirebase().then(fetchedUsers => {
+                users = fetchedUsers;
 
-        if (users.length === 0) {
-            usersList.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.1em;">No users registered yet. Please register users first.</p>';
-            return;
-        }
+                const filteredUsers = users.filter(user => {
+                    return user.name.toLowerCase().includes(searchTerm) ||
+                        user.mobile.toLowerCase().includes(searchTerm);
+                });
 
-        usersList.innerHTML = users.map(user => {
-            const todayRecord = attendanceRecords.find(
-                record => record.userId === user.id && record.date === currentDate
-            );
+                if (filteredUsers.length === 0) {
+                    usersList.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.1em;">No matching users found.</p>';
+                    return;
+                }
 
-            return `
+                usersList.innerHTML = filteredUsers.map(user => {
+                    const todayRecord = attendanceRecords.find(
+                        record => record.userId === user.id && record.date === currentDate
+                    );
+
+                    return `
                 <div class="user-card">
                     <div class="user-info">
                         <div class="user-detail"><strong>Name:</strong> ${user.name}</div>
@@ -515,59 +553,66 @@
                     ` : ''}
                 </div>
             `;
-        }).join('');
+                }).join('');
+            }).catch(error => {
+                console.error("Failed to fetch users from Firebase:", error);
+                usersList.innerHTML = '<p style="color:red;">Failed to load users.</p>';
+            });
+        }
 
-        updateStats(); // ✅ Also update stats once users are loaded
-    }).catch(error => {
-        console.error("Failed to fetch users from Firebase:", error);
-        usersList.innerHTML = '<p style="color:red;">Failed to load users.</p>';
-    });
-}
 
         // Render attendance records
         function renderRecords() {
             const recordsList = document.getElementById('recordsList');
 
-            if (attendanceRecords.length === 0) {
-                recordsList.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.1em;">No attendance records yet.</p>';
-                return;
-            }
+            getAttendanceRecords().then(fetchedRecords => {
+                attendanceRecords = fetchedRecords;
 
-            // Group records by date
-            const recordsByDate = {};
-            attendanceRecords.forEach(record => {
-                if (!recordsByDate[record.date]) {
-                    recordsByDate[record.date] = [];
+                if (attendanceRecords.length === 0) {
+                    recordsList.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.1em;">No attendance records yet.</p>';
+                    return;
                 }
-                recordsByDate[record.date].push(record);
-            });
 
-            recordsList.innerHTML = Object.entries(recordsByDate)
-                .sort(([a], [b]) => new Date(b) - new Date(a))
-                .map(([date, records]) => `
-                    <div style="margin-bottom: 30px;">
-                        <h3 style="color: #4f46e5; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
-                            📅 ${new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                        </h3>
-                        <div style="display: grid; gap: 10px;">
-                            ${records.map(record => `
-                                <div style="background: ${record.status === 'present' ? '#dcfce7' : '#fef2f2'}; 
-                                           border: 1px solid ${record.status === 'present' ? '#bbf7d0' : '#fecaca'}; 
-                                           border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-                                    <div>
-                                        <strong>${record.userName}</strong>
-                                        <span style="margin-left: 15px; color: ${record.status === 'present' ? '#166534' : '#991b1b'};">
-                                            ${record.status === 'present' ? '✅ Present' : '❌ Absent'}
-                                        </span>
-                                    </div>
-                                    <small style="color: #6b7280;">
-                                        ${new Date(record.timestamp).toLocaleTimeString()}
-                                    </small>
+                // Group by date
+                const recordsByDate = {};
+                attendanceRecords.forEach(record => {
+                    if (!recordsByDate[record.date]) {
+                        recordsByDate[record.date] = [];
+                    }
+                    recordsByDate[record.date].push(record);
+                });
+
+                // Render grouped
+                recordsList.innerHTML = Object.entries(recordsByDate)
+                    .sort(([a], [b]) => new Date(b) - new Date(a))
+                    .map(([date, records]) => `
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #4f46e5; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+                        📅 ${new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </h3>
+                    <div style="display: grid; gap: 10px;">
+                        ${records.map(record => `
+                            <div style="background: ${record.status === 'present' ? '#dcfce7' : '#fef2f2'}; 
+                                       border: 1px solid ${record.status === 'present' ? '#bbf7d0' : '#fecaca'}; 
+                                       border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>${record.userName}</strong>
+                                    <span style="margin-left: 15px; color: ${record.status === 'present' ? '#166534' : '#991b1b'};">
+                                        ${record.status === 'present' ? '✅ Present' : '❌ Absent'}
+                                    </span>
                                 </div>
-                            `).join('')}
-                        </div>
+                                <small style="color: #6b7280;">
+                                    ${new Date(record.timestamp).toLocaleTimeString()}
+                                </small>
+                            </div>
+                        `).join('')}
                     </div>
-                `).join('');
+                </div>
+            `).join('');
+            }).catch(error => {
+                console.error("Failed to load attendance records:", error);
+                recordsList.innerHTML = '<p style="color:red;">Error loading records.</p>';
+            });
         }
 
         // Update statistics
