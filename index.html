@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,7 +24,7 @@
             margin: 0 auto;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
@@ -164,7 +165,7 @@
 
         .user-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
 
         .user-info {
@@ -249,17 +250,18 @@
             .user-info {
                 grid-template-columns: 1fr;
             }
-            
+
             .attendance-actions {
                 flex-direction: column;
             }
-            
+
             .btn {
                 width: 100%;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -356,9 +358,9 @@
         }
 
         // User registration
-        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+        document.getElementById('registrationForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            
+
             const formData = new FormData(e.target);
             const userData = {
                 id: Date.now().toString(),
@@ -376,11 +378,27 @@
             }
 
             users.push(userData);
+            registerUserToSheet(userData);
             showMessage('User registered successfully!', 'success');
             e.target.reset();
             updateStats();
             renderUsersList();
         });
+
+        // Register user
+        function registerUserToSheet(user) {
+            fetch('https://script.google.com/macros/s/AKfycbyDrzSB3EribWWQ6iDyEn4rbIlTWqX-IrlEjKPcWzLNomjs00CV2ySWs_S8YXRqKUUL/exec?sheet=Users', {
+                method: 'POST',
+                body: JSON.stringify({
+                    row: [
+                        user.id, user.name, user.mobile, user.age, user.address, user.registeredDate
+                    ]
+                }),
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(res => res.json())
+                .then(data => console.log(data));
+        }
 
         // Mark attendance
         function markAttendance(userId, status) {
@@ -413,10 +431,19 @@
             renderRecords();
         }
 
+        function getUsersFromSheet() {
+            fetch('https://script.google.com/macros/s/AKfycbyDrzSB3EribWWQ6iDyEn4rbIlTWqX-IrlEjKPcWzLNomjs00CV2ySWs_S8YXRqKUUL/exec?sheet=Users')
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data); // You can now loop over this
+                });
+        }
+
         // Render users list for attendance
         function renderUsersList() {
+            getUsersFromSheet();
             const usersList = document.getElementById('usersList');
-            
+
             if (users.length === 0) {
                 usersList.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.1em;">No users registered yet. Please register users first.</p>';
                 return;
@@ -465,7 +492,7 @@
         // Render attendance records
         function renderRecords() {
             const recordsList = document.getElementById('recordsList');
-            
+
             if (attendanceRecords.length === 0) {
                 recordsList.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.1em;">No attendance records yet.</p>';
                 return;
@@ -511,7 +538,7 @@
         // Update statistics
         function updateStats() {
             document.getElementById('totalUsers').textContent = users.length;
-            
+
             const todayRecords = attendanceRecords.filter(record => record.date === currentDate);
             document.getElementById('todayAttendance').textContent = todayRecords.length;
         }
@@ -526,9 +553,9 @@
             const message = document.createElement('div');
             message.className = `message ${type}`;
             message.textContent = text;
-            
+
             document.querySelector('.content').insertBefore(message, document.querySelector('.tabs'));
-            
+
             setTimeout(() => {
                 message.remove();
             }, 3000);
@@ -538,4 +565,5 @@
         init();
     </script>
 </body>
+
 </html>
