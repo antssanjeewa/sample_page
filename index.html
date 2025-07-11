@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Marking System - 1</title>
+    <title>Attendance Marking System</title>
     <style>
         * {
             margin: 0;
@@ -265,7 +265,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📋 Attendance System</h1>
+            <h1>📋 Attendance System - 1</h1>
             <p>Register users and track their attendance efficiently</p>
         </div>
 
@@ -338,11 +338,8 @@
 
         const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
-    </script>
 
-    <script type="module">
-        import { addDoc, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+        // ✅ Make functions available globally
         window.registerUserToFirebase = async function (user) {
             try {
                 await addDoc(collection(window.db, "users"), user);
@@ -351,17 +348,12 @@
                 console.error("Error adding document: ", e);
             }
         };
-    </script>
-
-    <script type="module">
-        import { getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         window.getUsersFromFirebase = async function () {
-            const querySnapshot = await getDocs(collection(window.db, "users"));
+            const querySnapshot = await getDocs(collection(db, "users"));
             return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         };
     </script>
-
 
     <script>
         // Data storage
@@ -373,7 +365,7 @@
         // Initialize the application
         function init() {
             updateStats();
-            renderUsersList();
+            // renderUsersList();
             renderRecords();
         }
 
@@ -492,6 +484,7 @@
 
             getUsersFromFirebase().then(users => {
                 console.log(users);
+                users = fetchedUsers;
             });
 
             const usersList = document.getElementById('usersList');
