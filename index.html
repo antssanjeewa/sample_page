@@ -398,8 +398,7 @@
 
             fetch('https://script.google.com/macros/s/AKfycbyDrzSB3EribWWQ6iDyEn4rbIlTWqX-IrlEjKPcWzLNomjs00CV2ySWs_S8YXRqKUUL/exec?sheet=Users', {
                 method: 'POST',
-                body: form,
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                body: form
             })
                 .then(res => res.json())
                 .then(data => console.log(data));
