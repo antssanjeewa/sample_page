@@ -387,14 +387,19 @@
 
         // Register user
         function registerUserToSheet(user) {
+        const form = new URLSearchParams();
+    form.append('sheet', 'Users');
+    form.append('id', user.id);
+    form.append('name', user.name);
+    form.append('mobile', user.mobile);
+    form.append('age', user.age);
+    form.append('address', user.address);
+    form.append('registeredDate', user.registeredDate);
+
             fetch('https://script.google.com/macros/s/AKfycbyDrzSB3EribWWQ6iDyEn4rbIlTWqX-IrlEjKPcWzLNomjs00CV2ySWs_S8YXRqKUUL/exec?sheet=Users', {
                 method: 'POST',
-                body: JSON.stringify({
-                    row: [
-                        user.id, user.name, user.mobile, user.age, user.address, user.registeredDate
-                    ]
-                }),
-                headers: { 'Content-Type': 'application/json' }
+                body: form,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             })
                 .then(res => res.json())
                 .then(data => console.log(data));
